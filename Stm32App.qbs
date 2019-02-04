@@ -64,6 +64,8 @@ Product {
         "-fno-common",
         "-ffunction-sections",
         "-fdata-sections",
+	"-fno-merge-all-constants",
+	"-fmerge-constants",
         "-Wshadow",
         "-Wno-unused-variable",
         "-Wimplicit-function-declaration",
@@ -84,9 +86,14 @@ Product {
          "-specs=nano.specs"
     ])
 
+    Group {
+        name: "Linker Script Template"
+        files: [ "libopencm3/ld/linker.ld.S" ]
+        fileTags: [ "linker.gen" ]
+    }
+
     Rule {
-        inputs: []
-        multiplex: true
+        inputs: [ "linker.gen" ]
         
         Artifact {
             fileTags: ["ldscript"]
@@ -106,7 +113,7 @@ Product {
             ].concat(product.moduleProperty("cpp", "defines"))
             for (i in defines)
                 args.push("-D" + defines[i]);
-            args.push(product.sourceDirectory + "/../libopencm3/ld/linker.ld.S");
+            args.push(input.filePath);
             var cmd = new Command(product.moduleProperty("cpp", "compilerPath"), args);
             cmd.description = "generate ld script: " + output.filePath;
             cmd.stdoutFilePath = output.filePath;
