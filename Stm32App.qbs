@@ -10,6 +10,7 @@ Product {
     property string romSize: "64K"
     property string ramOffset: "0x20000000"
     property string ramSize: "20K"
+
     property stringList stm32flags: [
         "-mcpu=cortex-m3",
         "-mthumb",
@@ -34,7 +35,7 @@ Product {
 
     Properties {
         condition: cpp.debugInformation
-        cpp.defines: outer.concat(["DEBUG=1"])
+        cpp.defines: outer.concat(["DEBUG"])
         cpp.optimization: "none"
     }
 
@@ -54,37 +55,31 @@ Product {
     ]
 
     cpp.positionIndependentCode: false
-    cpp.cFlags: ["-std=c99"]
-    cpp.cxxFlags: ["-std=c++11"]
+    cpp.cLanguageVersion: "c99"
+    cpp.cxxLanguageVersion: "c++11"
     cpp.enableExceptions: false
     cpp.executableSuffix: ".elf"
+    cpp.discardUnusedData: true
+    // cpp.visibility: "hidden"
 
-    cpp.commonCompilerFlags: stm32flags.concat([
-        "-ggdb3",
-        "-fno-common",
-        "-ffunction-sections",
-        "-fdata-sections",
-	"-fno-merge-all-constants",
-	"-fmerge-constants",
-        "-Wshadow",
-        "-Wno-unused-variable",
-        "-Wimplicit-function-declaration",
-        "-Wredundant-decls",
-        "-Wstrict-prototypes",
-        "-Wmissing-prototypes",
-        "-MD",
-        "-Wundef"
-    ])
+    cpp.commonCompilerFlags: stm32flags.concat(["-ggdb3",
+                                                "-fno-common",
+                                                "-ffunction-sections",
+                                                "-fdata-sections",
+                                                "-fno-merge-all-constants",
+                                                "-fmerge-constants",
+                                                "-Wshadow",
+                                                "-Wno-unused-variable",
+                                                "-Wimplicit-function-declaration",
+                                                "-Wredundant-decls",
+                                                "-Wstrict-prototypes",
+                                                "-Wmissing-prototypes",
+                                                "-MD",
+                                                "-Wundef"])
 
-    cpp.linkerFlags: [
-        "--gc-sections"
-    ]
-
-    cpp.driverLinkerFlags: stm32flags.concat([
-         "-T" + buildDirectory + "/" +product.name + ".ld",
-         "-nostartfiles",
-         "-specs=nano.specs"
-    ])
+    cpp.driverLinkerFlags: stm32flags.concat(["-T" + buildDirectory + "/" +product.name + ".ld",
+                                              "-nostartfiles",
+                                              "-specs=nano.specs"])
 
     Group {
         name: "Linker Script Template"
@@ -101,16 +96,13 @@ Product {
         }
         
         prepare: {
-            var args = [
-                "-E", 
-                "-P"
-            ].concat(product.stm32flags);
+            var args = ["-E", "-P"].concat(product.stm32flags);
             var defines = [
-                "_ROM=" + product.romSize,
-                "_RAM=" + product.ramSize,
-                "_ROM_OFF=" + product.romOffset,
-                "_RAM_OFF=" + product.ramOffset
-            ].concat(product.moduleProperty("cpp", "defines"))
+                        "_ROM=" + product.romSize,
+                        "_RAM=" + product.ramSize,
+                        "_ROM_OFF=" + product.romOffset,
+                        "_RAM_OFF=" + product.ramOffset
+                    ].concat(product.moduleProperty("cpp", "defines"))
             for (i in defines)
                 args.push("-D" + defines[i]);
             args.push(input.filePath);
